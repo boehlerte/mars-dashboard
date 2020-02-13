@@ -11,8 +11,17 @@ let store = {
 const root = document.getElementById('root')
 
 const onSelectTab = (selectedTab) => {
-    console.log('selected: ', selectedTab);
     updateStore(store, { selectedRover: selectedTab })
+}
+
+const formatDate = (date) => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const dateArr = date.split('-')
+    const year = dateArr[0]
+    const month = months[Number(dateArr[1])-1]
+    const day = dateArr[2]
+    console.log(year, dateArr[1], day)
+    return `${month} ${day} ${year}`
 }
 
 const updateStore = (store, newState) => {
@@ -27,17 +36,18 @@ const render = async (root, state) => {
 
 // create content
 const App = (state) => {
-    let { rovers, roverNames, selectedRover } = state
+    let { rovers, roverNames, selectedRover, photos } = state
 
     return `
         <header>
-            <h1>Explore the Mars Rovers</h1>
+            <div class="banner">
+                <img class="banner-img" src='./assets/images/milky-way.jpeg' />
+                <h1 class="banner-text">Explore the Mars Rovers</h1>
+            </div>
+            ${Nav(roverNames, selectedRover)}
         </header>
         <main>
-            <section>
-                ${Tabs(roverNames, selectedRover)}
-                ${RoverData(rovers, selectedRover)}
-            </section>
+            ${RoverData(rovers, selectedRover, photos)}
         </main>
         <footer>
             <h6>
@@ -81,13 +91,24 @@ const ImageOfTheDay = (apod) => {
     }
 }
 
-const Tabs = (roverNames, selectedRover) => {
+const Tab = (name, selectedRover) => {
+    const className = name === selectedRover ? 'active' : 'inactive';
+
+    return `
+        <div class="nav-tab ${className}">
+            <a href="#" id="${name}" class="nav-link" onclick="onSelectTab(id)">${name}</a> 
+        </div>
+    `
+}
+
+
+const Nav = (roverNames, selectedRover) => {
     return (
         `
             <nav class="nav-container">
                 ${roverNames.map((name) => {
                     return `
-                        <a href="#" id="${name}" onclick="onSelectTab(id)">${name}</a>
+                        ${Tab(name, selectedRover)}
                     `
                 }).join('')}
             </nav>
@@ -95,8 +116,7 @@ const Tabs = (roverNames, selectedRover) => {
     )
 }
 
-const RoverPhotos = (rover_name, max_date) => {
-    const { photos } = store
+const RoverPhotos = (rover_name, max_date, photos) => {
     const rover = Object.keys(photos).find(key => key === rover_name)
 
     if (!rover || photos[rover][0].earth_date !== max_date) {
@@ -107,16 +127,23 @@ const RoverPhotos = (rover_name, max_date) => {
 
     if (roverPhotos) {
         return `
-            <p>Most recent photos from ${rover_name} were taken on ${max_date}</p>
-            ${roverPhotos.map(photo => (
-                `<img src=${photo.img_src} width=300px/>` 
-            )).join('')}
+            <section>
+                <p>Check out some of ${rover_name}'s most recent photos. The following photos were taken on ${formatDate(max_date)}.</p>
+                <div class="photos">
+                    ${roverPhotos.map(photo => (
+                        `<img class="rover-img" src=${photo.img_src} width=300px/>` 
+                    )).join('')}
+                </div>
+            </section>
         `
     }
-    return `<div> Loading Photos... </div>`
+    return `
+        <section>
+            <div> Loading Photos... </div>
+        </section>`
 }
 
-const RoverData = (rovers, selectedRover) => {
+const RoverData = (rovers, selectedRover, photos) => {
     const rover = Object.keys(rovers).find(key => key === selectedRover)
 
     if (!rover) {
@@ -129,10 +156,13 @@ const RoverData = (rovers, selectedRover) => {
     if (roverToDisplay) {
         return (
             `
-                <p>${roverToDisplay.name} was launched on ${roverToDisplay.launch_date}</p>
-                <p>${roverToDisplay.name} landed on Mars on ${roverToDisplay.landing_date}</p>
-                <p>${roverToDisplay.status}</p>
-                ${RoverPhotos(roverToDisplay.name, roverToDisplay.max_date)}
+                <section>
+                    <p><b>Launched:</b> ${formatDate(roverToDisplay.launch_date)}</p>
+                    <p><b>Landed:</b> ${formatDate(roverToDisplay.landing_date)}</p>
+                    <p><b>Status:</b> ${roverToDisplay.status.toUpperCase()}</p>
+                </section>
+                    
+                ${RoverPhotos(roverToDisplay.name, roverToDisplay.max_date, photos)}
             `
         )
     } 
