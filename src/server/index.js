@@ -27,11 +27,11 @@ app.get('/rovers/:rover_name', async (req, res) => {
     }
 })
 
-app.get('/rover_photos/:rover_name/:max_date', async (req, res) => {
+app.get('/rover_photos/:rover_name', async (req, res) => {
     try {
-        const { rover_name, max_date } = req.params;
+        const { rover_name } = req.params;
         let rover_photos = await fetch(
-            `${rover_endpoint}/rovers/${rover_name}/photos?earth_date=${max_date}&api_key=${process.env.API_KEY}
+            `${rover_endpoint}/rovers/${rover_name}/latest_photos?api_key=${process.env.API_KEY}
         `).then(res => res.json())
 
         res.send(rover_photos)

@@ -121,8 +121,8 @@ const Nav = (roverNames, selectedRover) => {
 const RoverPhotos = (rover_name, max_date, photos) => {
     const rover = Object.keys(photos).find(key => key === rover_name)
 
-    if (!rover || photos[rover][0].earth_date !== max_date) {
-        getLatestRoverPhotos(rover_name, max_date)
+    if (!rover) {
+        getLatestRoverPhotos(rover_name)
     }
 
     const roverPhotos = store.photos[rover_name]
@@ -194,14 +194,14 @@ const getRoverData = (rover_name) => {
         ))
 }
 
-const getLatestRoverPhotos = (rover_name, max_date) => {
-    fetch(`http://localhost:3000/rover_photos/${rover_name}/${max_date}`)
+const getLatestRoverPhotos = (rover_name) => {
+    fetch(`http://localhost:3000/rover_photos/${rover_name}`)
         .then(res => res.json())
-        .then(({ photos }) => {
+        .then(({ latest_photos }) => {
             updateStore(store, {
                 photos: {
                     ...store.photos,
-                    [rover_name]: [...photos],
+                    [rover_name]: [...latest_photos],
                 }
             }
         )})
