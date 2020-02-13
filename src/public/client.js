@@ -1,3 +1,8 @@
+import { set } from 'immutable'
+import './assets/stylesheets/resets.css'
+import './assets/stylesheets/index.css'
+import img from './assets/images/milky-way.jpeg'
+
 let store = {
     user: { name: 'Student' },
     apod: '',
@@ -10,9 +15,10 @@ let store = {
 // add our markup to the page
 const root = document.getElementById('root')
 
-const onSelectTab = (selectedTab) => {
+function onSelectTab (selectedTab) {
     updateStore(store, { selectedRover: selectedTab })
 }
+window.onSelectTab = onSelectTab
 
 const formatDate = (date) => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -20,13 +26,11 @@ const formatDate = (date) => {
     const year = dateArr[0]
     const month = months[Number(dateArr[1])-1]
     const day = dateArr[2]
-    console.log(year, dateArr[1], day)
     return `${month} ${day} ${year}`
 }
 
 const updateStore = (store, newState) => {
     store = Object.assign(store, newState)
-    console.log('new store: ', store);
     render(root, store)
 }
 
@@ -41,7 +45,7 @@ const App = (state) => {
     return `
         <header>
             <div class="banner">
-                <img class="banner-img" src='./assets/images/milky-way.jpeg' />
+                <img class="banner-img" src=${img} />
                 <h1 class="banner-text">Explore the Mars Rovers</h1>
             </div>
             ${Nav(roverNames, selectedRover)}
@@ -69,9 +73,7 @@ const ImageOfTheDay = (apod) => {
     // If image does not already exist, or it is not from today -- request it again
     const today = new Date()
     const photodate = new Date(apod.date)
-    console.log(photodate.getDate(), today.getDate());
 
-    console.log(photodate.getDate() === today.getDate());
     if (!apod || apod.date === today.getDate() ) {
         getImageOfTheDay(store)
     }
@@ -147,7 +149,6 @@ const RoverData = (rovers, selectedRover, photos) => {
     const rover = Object.keys(rovers).find(key => key === selectedRover)
 
     if (!rover) {
-        console.log(rover)
         getRoverData(selectedRover)
     }
 
@@ -185,19 +186,15 @@ const getRoverData = (rover_name) => {
         .then(res => res.json())
         .then(({ photo_manifest }) => updateStore(store, 
             {
-                rovers:  {
-                    ...store.rovers,
-                    [rover_name]: {
-                        ...store.rovers[rover_name],
-                        ...photo_manifest
-                    }
-                }
-
+                rovers: set(store.rovers, rover_name, {
+                    ...store.rovers[rover_name],
+                    ...photo_manifest
+                })
             },
         ))
 }
 
-getLatestRoverPhotos = (rover_name, max_date) => {
+const getLatestRoverPhotos = (rover_name, max_date) => {
     fetch(`http://localhost:3000/rover_photos/${rover_name}/${max_date}`)
         .then(res => res.json())
         .then(({ photos }) => {
